@@ -1,0 +1,17 @@
+{
+  "name": "Waktu Solat — Azan",
+  "short_name": "Waktu Solat",
+  "description": "Waktu solat JAKIM (waktusolat.my) dengan azan automatik",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0e1513",
+  "theme_color": "#0e1513",
+  "lang": "ms",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"},
+    {"src": "icon.svg", "sizes": "any", "type": "image/svg+xml"}
+  ]
+}

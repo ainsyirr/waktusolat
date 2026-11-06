@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#0e1513"/>
+  <!-- mihrab arch -->
+  <path d="M156 396V236c0-62 44-104 100-140 56 36 100 78 100 140v160" fill="none" stroke="#d9a85b" stroke-width="22" stroke-linejoin="round"/>
+  <!-- crescent -->
+  <circle cx="256" cy="262" r="50" fill="#d9a85b"/>
+  <circle cx="276" cy="248" r="44" fill="#0e1513"/>
+  <line x1="128" y1="396" x2="384" y2="396" stroke="#d9a85b" stroke-width="22" stroke-linecap="round"/>
+</svg>

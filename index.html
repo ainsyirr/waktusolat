@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Waktu Solat</title>
+<meta name="description" content="Waktu solat JAKIM dengan azan automatik">
+<meta name="theme-color" content="#0e1513">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Manrope:wght@400;500;600;700&family=Amiri&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0e1513; --surface:#151f1c; --surface2:#1b2724; --line:#26332f;
+  --ink:#ece6d8; --muted:#8e9a94; --dim:#5d6965;
+  --accent:#d9a85b; --accent-soft:rgba(217,168,91,.14); --accent-ink:#1b1408;
+  --ok:#7fbf9a; --warn:#e08a6b;
+  --serif:'Fraunces',Georgia,'Times New Roman',serif;
+  --sans:'Manrope',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --r:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+body{min-height:100dvh;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:560px;margin:0 auto;padding:16px 18px 40px}
+
+/* top bar */
+.top{display:flex;align-items:center;gap:10px;min-height:48px}
+.zone{flex:1;min-width:0;text-align:left;padding:6px 0;display:flex;flex-direction:column;gap:2px}
+.zone b{font-size:13px;letter-spacing:.12em;color:var(--accent);font-weight:700}
+.zone span{font-size:14px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.icon-btn{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;color:var(--muted)}
+.icon-btn:hover{background:var(--surface);color:var(--ink)}
+.icon-btn svg{width:22px;height:22px}
+
+.date{margin:14px 0 0;font-size:14px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 10px}
+.date .hj{color:var(--ink)}
+
+/* next prayer */
+.next{margin:26px 0 8px}
+.next .lbl{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.next .name{font-family:var(--serif);font-weight:600;font-size:clamp(44px,13vw,64px);line-height:1;margin:8px 0 0;display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.next .name small{font-family:var(--sans);font-size:20px;font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums}
+.count{font-family:var(--serif);font-size:clamp(34px,10vw,46px);font-variant-numeric:lining-nums tabular-nums;margin-top:14px;letter-spacing:.01em;color:var(--ink)}
+.count .u{font-family:var(--sans);font-size:13px;color:var(--muted);margin:0 10px 0 3px;letter-spacing:.06em}
+.bar{height:3px;background:var(--line);border-radius:3px;margin-top:16px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width 1s linear}
+.bar-cap{display:flex;justify-content:space-between;font-size:12px;color:var(--dim);margin-top:6px}
+
+/* list */
+.list{margin:26px 0 0;border-top:1px solid var(--line)}
+.row{display:grid;grid-template-columns:1fr auto 48px;align-items:center;min-height:58px;border-bottom:1px solid var(--line);padding-left:4px}
+.row .n{font-size:17px;font-weight:600}
+.row .n em{font-style:normal;font-size:12px;color:var(--muted);font-weight:500;margin-left:8px}
+.row .t{font-size:19px;font-variant-numeric:tabular-nums;font-weight:500}
+.row.past .n,.row.past .t{color:var(--dim)}
+.row.minor .n,.row.minor .t{font-size:15px;color:var(--muted);font-weight:500}
+.row.minor.past .n,.row.minor.past .t{color:var(--dim)}
+.row.cur{background:var(--accent-soft);border-radius:10px;border-bottom-color:transparent;margin:-1px 0 0;padding-left:12px}
+.row.cur .n,.row.cur .t{color:var(--accent)}
+.bell{width:44px;height:44px;margin-left:4px;display:grid;place-items:center;border-radius:10px;color:var(--dim)}
+.bell svg{width:20px;height:20px}
+.bell[aria-pressed="true"]{color:var(--accent)}
+.bell:hover{background:var(--surface2)}
+
+/* actions */
+.actions{display:flex;gap:10px;margin-top:22px}
+.btn{flex:1;min-height:48px;border-radius:12px;background:var(--surface);border:1px solid var(--line);font-weight:600;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn:hover{background:var(--surface2)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn svg{width:18px;height:18px}
+
+.status{margin-top:18px;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border-radius:12px;border:1px dashed var(--line);width:100%;text-align:left}
+.status .dot{width:8px;height:8px;border-radius:50%;background:var(--warn);flex:none}
+.status.on{border-style:solid}
+.status.on .dot{background:var(--ok)}
+.foot{margin-top:24px;font-size:12px;color:var(--dim);line-height:1.6}
+.foot a{color:var(--muted)}
+
+/* sheets */
+.sheet{position:fixed;inset:0;background:rgba(5,9,8,.72);display:none;align-items:flex-end;justify-content:center;z-index:20}
+.sheet.open{display:flex}
+.panel{background:var(--surface);width:100%;max-width:560px;max-height:88dvh;overflow:auto;border-radius:20px 20px 0 0;padding:18px 18px calc(24px + env(safe-area-inset-bottom));border-top:1px solid var(--line)}
+@media (min-width:640px){.sheet{align-items:center}.panel{border-radius:20px;border:1px solid var(--line)}}
+.panel h2{font-family:var(--serif);font-weight:600;font-size:24px;margin:4px 0 16px;display:flex;justify-content:space-between;align-items:center}
+.field{display:flex;flex-direction:column;gap:8px;padding:14px 0;border-bottom:1px solid var(--line)}
+.field:last-child{border-bottom:0}
+.field label,.field .l{font-size:13px;color:var(--muted);font-weight:600;letter-spacing:.02em}
+.field .h{font-size:12px;color:var(--dim);line-height:1.5}
+select,input[type=range]{width:100%}
+select{min-height:46px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:0 12px;font:inherit;font-size:15px}
+input[type=range]{accent-color:var(--accent);height:32px}
+.seg{display:flex;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+.seg button{flex:1;min-height:40px;border-radius:8px;font-size:14px;color:var(--muted);font-weight:600}
+.seg button[aria-pressed="true"]{background:var(--surface2);color:var(--ink)}
+.switch{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:44px}
+.switch span{font-size:15px}
+.tog{width:50px;height:30px;border-radius:30px;background:var(--line);position:relative;flex:none}
+.tog::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:var(--muted);transition:transform .2s}
+.tog[aria-pressed="true"]{background:var(--accent)}
+.tog[aria-pressed="true"]::after{transform:translateX(20px);background:var(--accent-ink)}
+
+/* month table */
+#monthSheet .panel{padding-left:10px;padding-right:10px;padding-top:0}
+#monthSheet h2{position:sticky;top:0;background:var(--surface);margin:0;padding:14px 4px 10px;z-index:2}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:12.5px}
+th{position:sticky;top:64px;z-index:1;background:var(--surface);color:var(--muted);font-weight:600;text-align:right;padding:8px 2px;font-size:10px;letter-spacing:.03em;text-transform:uppercase}
+th:first-child,td:first-child{text-align:left}
+td{padding:8px 2px;text-align:right;border-top:1px solid var(--line)}
+td small{color:var(--dim);display:block;font-size:11px}
+tr.today td{background:var(--accent-soft);color:var(--accent)}
+tr.fri td:first-child{color:var(--accent)}
+.month-nav{display:flex;gap:6px}
+.month-nav button{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);color:var(--muted);font-size:18px}
+
+/* azan overlay */
+.azan{position:fixed;inset:0;z-index:30;background:var(--bg);display:none;flex-direction:column;justify-content:center;padding:32px 26px calc(32px + env(safe-area-inset-bottom));text-align:left}
+.azan.open{display:flex}
+.azan .k{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent)}
+.azan h1{font-family:var(--serif);font-weight:600;font-size:clamp(56px,18vw,96px);margin:10px 0 4px;line-height:1}
+.azan p{color:var(--muted);margin:0;font-size:15px;line-height:1.6;max-width:30em}
+.azan .wave{display:flex;gap:5px;height:28px;align-items:flex-end;margin:28px 0}
+.azan .wave i{width:5px;height:6px;background:var(--accent);border-radius:3px;animation:w 1.1s ease-in-out infinite}
+.azan .wave i:nth-child(2){animation-delay:.15s}.azan .wave i:nth-child(3){animation-delay:.3s}.azan .wave i:nth-child(4){animation-delay:.45s}.azan .wave i:nth-child(5){animation-delay:.6s}
+@keyframes w{0%,100%{height:6px}50%{height:28px}}
+.azan.ended .wave{display:none}
+.doa{display:none;margin:26px 0;border-top:1px solid var(--line);padding-top:20px}
+.azan.ended .doa{display:block}
+.doa .ar{font-family:'Amiri',serif;font-size:24px;line-height:2;direction:rtl;text-align:right;color:var(--ink)}
+.doa .tr{font-size:13px;color:var(--muted);line-height:1.6;margin-top:10px}
+.azan .btn{flex:none;max-width:320px;margin-top:8px}
+
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);background:var(--surface2);border:1px solid var(--line);padding:12px 18px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:40;max-width:90vw}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <button class="zone" id="zoneBtn" aria-label="Tukar zon">
+      <b id="zoneCode">SBH07</b>
+      <span id="zoneName">Memuatkan…</span>
+    </button>
+    <button class="icon-btn" id="setBtn" aria-label="Tetapan">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+    </button>
+  </header>
+
+  <div class="date"><span id="greg">—</span><span class="hj" id="hijri"></span></div>
+
+  <section class="next" aria-live="polite">
+    <div class="lbl" id="nextLbl">Waktu seterusnya</div>
+    <div class="name"><span id="nextName">—</span><small id="nextTime"></small></div>
+    <div class="count" id="count">--</div>
+    <div class="bar"><i id="barFill"></i></div>
+    <div class="bar-cap"><span id="capPrev"></span><span id="capNext"></span></div>
+  </section>
+
+  <div class="list" id="list"></div>
+
+  <button class="status" id="status"><span class="dot"></span><span id="statusTxt">Ketik untuk aktifkan azan</span></button>
+
+  <div class="actions">
+    <button class="btn" id="monthBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Jadual bulanan</button>
+    <button class="btn" id="testBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>Uji azan</button>
+  </div>
+
+  <p class="foot">Data waktu solat JAKIM melalui <a href="https://www.waktusolat.my/" target="_blank" rel="noopener">waktusolat.my</a> / api.waktusolat.app. Azan dimainkan secara automatik ketika aplikasi ini dibuka (boleh di latar belakang, tetapi bukan selepas ditutup sepenuhnya).</p>
+</div>
+
+<!-- settings -->
+<div class="sheet" id="setSheet" role="dialog" aria-modal="true" aria-labelledby="setTitle">
+  <div class="panel">
+    <h2 id="setTitle">Tetapan <button class="icon-btn" data-close aria-label="Tutup">✕</button></h2>
+    <div class="field">
+      <label for="zoneSel">Zon waktu solat</label>
+      <select id="zoneSel"></select>
+    </div>
+    <div class="field">
+      <label for="voiceSel">Suara azan (Zohor, Asar, Maghrib, Isyak)</label>
+      <select id="voiceSel">
+        <option value="azan.mp3">Mishary Alafasy — penuh (~3 min 50 s)</option>
+        <option value="azan_pendek.mp3">Jiharkah, Ustaz Fahmi — pendek (~23 s)</option>
+        <option value="chime">Bunyi loceng sahaja</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="subuhSel">Suara azan Subuh</label>
+      <select id="subuhSel">
+        <option value="azan_subuh.mp3">Azan Subuh khas — Fouad Adan</option>
+        <option value="same">Sama seperti waktu lain</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="vol">Kelantangan</label>
+      <input type="range" id="vol" min="0" max="1" step="0.05">
+    </div>
+    <div class="field">
+      <span class="l">Peringatan sebelum masuk waktu</span>
+      <div class="seg" id="remindSeg">
+        <button data-v="0">Tiada</button><button data-v="5">5 min</button><button data-v="10">10 min</button><button data-v="15">15 min</button>
+      </div>
+      <span class="h">Bunyi loceng lembut + notifikasi sebelum azan.</span>
+    </div>
+    <div class="field">
+      <span class="l">Format masa</span>
+      <div class="seg" id="fmtSeg"><button data-v="24">24 jam</button><button data-v="12">12 jam</button></div>
+    </div>
+    <div class="field">
+      <div class="switch"><span>Skrin sentiasa hidup</span><button class="tog" id="wakeTog" aria-label="Skrin sentiasa hidup"></button></div>
+      <span class="h">Cara paling pasti azan berbunyi: biarkan aplikasi terbuka dengan skrin hidup (cth. telefon dicas di rumah).</span>
+    </div>
+    <div class="field">
+      <div class="switch"><span>Notifikasi</span><button class="btn" id="notifBtn" style="flex:none;padding:0 16px">Benarkan</button></div>
+      <span class="h">Tunjuk notifikasi apabila masuk waktu ketika aplikasi di latar belakang.</span>
+    </div>
+  </div>
+</div>
+
+<!-- month -->
+<div class="sheet" id="monthSheet" role="dialog" aria-modal="true" aria-labelledby="monthTitle">
+  <div class="panel">
+    <h2><span id="monthTitle">Jadual</span>
+      <span class="month-nav"><button id="mPrev" aria-label="Bulan sebelum">‹</button><button id="mNext" aria-label="Bulan seterusnya">›</button><button data-close aria-label="Tutup">✕</button></span></h2>
+    <div id="monthBody"></div>
+  </div>
+</div>
+
+<!-- azan overlay -->
+<div class="azan" id="azan" role="alertdialog" aria-labelledby="azName">
+  <div class="k" id="azKicker">Telah masuk waktu</div>
+  <h1 id="azName">Zohor</h1>
+  <p id="azSub"></p>
+  <div class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="doa">
+    <div class="k" style="margin-bottom:10px">Doa selepas azan</div>
+    <div class="ar">اللَّهُمَّ رَبَّ هَذِهِ الدَّعْوَةِ التَّامَّةِ، وَالصَّلَاةِ الْقَائِمَةِ، آتِ مُحَمَّدًا الْوَسِيلَةَ وَالْفَضِيلَةَ، وَابْعَثْهُ مَقَامًا مَحْمُودًا الَّذِي وَعَدْتَهُ</div>
+    <div class="tr">“Ya Allah, Tuhan bagi seruan yang sempurna ini dan solat yang akan didirikan, kurniakanlah kepada Muhammad al-wasilah dan kelebihan, dan bangkitkanlah baginda di tempat terpuji yang telah Engkau janjikan.” (HR al-Bukhari)</div>
+  </div>
+  <button class="btn primary" id="azStop">Hentikan azan</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+'use strict';
+const API = 'https://api.waktusolat.app';
+const MYT = 8 * 3600e3;
+const $ = id => document.getElementById(id);
+
+const PRAYERS = [
+  {k:'imsak',  n:'Imsak',   azan:false, minor:true},
+  {k:'fajr',   n:'Subuh',   azan:true},
+  {k:'syuruk', n:'Syuruk',  azan:false, minor:true},
+  {k:'dhuhr',  n:'Zohor',   azan:true},
+  {k:'asr',    n:'Asar',    azan:true},
+  {k:'maghrib',n:'Maghrib', azan:true},
+  {k:'isha',   n:'Isyak',   azan:true},
+];
+const HIJRI = ['Muharram','Safar','Rabiulawal','Rabiulakhir','Jamadilawal','Jamadilakhir','Rejab','Syaaban','Ramadan','Syawal','Zulkaedah','Zulhijjah'];
+const BULAN = ['Januari','Februari','Mac','April','Mei','Jun','Julai','Ogos','September','Oktober','November','Disember'];
+const HIJRI_S = ['Muh','Saf','R.Awal','R.Akhir','J.Awal','J.Akhir','Rejab','Syaaban','Ramadan','Syawal','Zulkaedah','Zulhijjah'];
+const HARI = ['Ahad','Isnin','Selasa','Rabu','Khamis','Jumaat','Sabtu'];
+
+/* ---------- settings ---------- */
+const DEF = {zone:'SBH07', voice:'azan.mp3', subuh:'azan_subuh.mp3', vol:0.9, remind:0, fmt:24, wake:false,
+  on:{fajr:true,dhuhr:true,asr:true,maghrib:true,isha:true}};
+let S = Object.assign({}, DEF, JSON.parse(localStorage.getItem('ws:settings') || '{}'));
+S.on = Object.assign({}, DEF.on, S.on);
+const save = () => localStorage.setItem('ws:settings', JSON.stringify(S));
+
+/* ---------- time helpers (Malaysia = UTC+8, no DST) ---------- */
+const parts = ms => { const d = new Date(ms + MYT); return {y:d.getUTCFullYear(), m:d.getUTCMonth()+1, d:d.getUTCDate(), dow:d.getUTCDay()}; };
+const addDays = (p, n) => parts(Date.UTC(p.y, p.m-1, p.d) - MYT + 12*3600e3 + n*864e5);
+const fmt = ms => {
+  const d = new Date(ms + MYT); let h = d.getUTCHours(); const m = String(d.getUTCMinutes()).padStart(2,'0');
+  if (S.fmt === 12) { const ap = h < 12 ? 'pg' : (h < 19 ? 'ptg' : 'mlm'); h = h % 12 || 12; return `${h}:${m} ${ap}`; }
+  return `${String(h).padStart(2,'0')}:${m}`;
+};
+const hijriStr = h => { if (!h) return ''; const [y,m,d] = h.split('-').map(Number); return `${d} ${HIJRI[m-1]} ${y}H`; };
+
+/* ---------- data ---------- */
+const mkey = (z,y,m) => `ws:${z}:${y}-${m}`;
+const memo = {};
+function getMonth(z, y, m) {
+  const k = mkey(z,y,m);
+  if (!memo[k]) { const raw = localStorage.getItem(k); if (raw) memo[k] = JSON.parse(raw); }
+  return memo[k];
+}
+async function fetchMonth(z, y, m) {
+  const r = await fetch(`${API}/v2/solat/${z}?year=${y}&month=${m}`, {cache:'no-store'});
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  const j = await r.json();
+  if (!j.prayers || !j.prayers.length) throw new Error('kosong');
+  const data = j.prayers;
+  localStorage.setItem(mkey(z,y,m), JSON.stringify(data));
+  memo[mkey(z,y,m)] = data;
+  return data;
+}
+async function ensureMonth(z, y, m) { return getMonth(z,y,m) || fetchMonth(z,y,m); }
+function dayEntry(p) { const mo = getMonth(S.zone, p.y, p.m); return mo && mo.find(e => e.day === p.d); }
+
+let ZONES = JSON.parse(localStorage.getItem('ws:zones') || 'null');
+async function loadZones() {
+  try { const r = await fetch(`${API}/zones`); if (r.ok) { ZONES = await r.json(); localStorage.setItem('ws:zones', JSON.stringify(ZONES)); } } catch (e) {}
+  fillZones();
+}
+const zoneName = z => (ZONES && (ZONES.find(x => x.jakimCode === z) || {}).daerah) || (z === 'SBH07' ? 'Kota Kinabalu, Ranau, Kota Belud, Tuaran, Penampang, Papar, Putatan, Bahagian Pantai Barat' : z);
+
+/* events = flattened prayer instants around now */
+function events(now) {
+  const t = parts(now), out = [];
+  for (const off of [-1, 0, 1]) {
+    const p = addDays(t, off), e = dayEntry(p);
+    if (!e) continue;
+    for (const pr of PRAYERS) out.push({...pr, t: e[pr.k] * 1000, day: p, entry: e, label: (pr.k === 'dhuhr' && p.dow === 5) ? 'Jumaat' : pr.n});
+  }
+  return out;
+}
+
+/* ---------- audio ---------- */
+const player = new Audio(); player.preload = 'auto';
+window.__ws = {player, get unlocked() { return unlocked; }};   // debug handle
+let actx = null, unlocked = false;
+const blobs = {};
+async function blobUrl(file) {
+  if (!blobs[file]) { const r = await fetch('audio/' + file); blobs[file] = URL.createObjectURL(await r.blob()); }
+  return blobs[file];
+}
+const within = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);
+let unlocking = null;
+function unlock() {
+  if (unlocked) return Promise.resolve();
+  if (unlocking) return unlocking;
+  unlocking = (async () => {
+    // AudioContext must be created/resumed synchronously inside the tap
+    try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
+    const ctxOk = actx ? within(actx.resume(), 3000).then(() => true, () => false) : Promise.resolve(false);
+    let elOk = false;
+    try {
+      player.muted = true; player.src = 'audio/azan_pendek.mp3';
+      await within(player.play(), 4000); elOk = true;
+    } catch (e) { console.warn('unlock audio element', e); }
+    try { player.pause(); player.currentTime = 0; } catch (e) {}
+    player.muted = false;
+    unlocked = elOk || await ctxOk;
+    ['azan.mp3','azan_subuh.mp3','azan_pendek.mp3'].forEach(f => blobUrl(f).catch(()=>{}));
+    unlocking = null;
+    renderStatus();
+  })();
+  return unlocking;
+}
+function chime(times = 3) {
+  if (!actx) return;
+  const t0 = actx.currentTime + .05;
+  for (let i = 0; i < times; i++) {
+    [660, 990].forEach((f, j) => {
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = 'sine'; o.frequency.value = f;
+      const s = t0 + i * 1.1;
+      g.gain.setValueAtTime(0, s); g.gain.linearRampToValueAtTime(S.vol * (j ? .12 : .3), s + .02);
+      g.gain.exponentialRampToValueAtTime(.0001, s + 1.6);
+      o.connect(g).connect(actx.destination); o.start(s); o.stop(s + 1.7);
+    });
+  }
+}
+
+let azanOpen = false;
+async function playAzan(ev, test = false) {
+  const file = ev.k === 'fajr' && S.subuh !== 'same' ? S.subuh : S.voice;
+  const ov = $('azan');
+  $('azKicker').textContent = test ? 'Ujian azan' : 'Telah masuk waktu';
+  $('azName').textContent = ev.label;
+  $('azSub').textContent = `${fmt(ev.t)} · ${zoneName(S.zone)}`;
+  ov.classList.remove('ended'); ov.classList.add('open'); azanOpen = true;
+  $('azStop').textContent = 'Hentikan azan';
+  if ('mediaSession' in navigator) navigator.mediaSession.metadata = new MediaMetadata({title: `Azan ${ev.label}`, artist: zoneName(S.zone), artwork:[{src:'icon-512.png',sizes:'512x512',type:'image/png'}]});
+  if (file === 'chime') { chime(4); setTimeout(endAzan, 4500); return; }
+  try {
+    let src; try { src = await within(blobUrl(file), 8000); } catch (e) { src = 'audio/' + file; }
+    player.src = src; player.volume = S.vol;
+    await within(player.play(), 6000);
+  } catch (e) {
+    console.warn('azan play', e);
+    chime(4);
+    if (!unlocked) toast('Bunyi azan disekat pelayar — ketik “aktifkan azan” selepas membuka aplikasi.');
+  }
+}
+function endAzan() { $('azan').classList.add('ended'); $('azStop').textContent = 'Tutup'; }
+player.addEventListener('ended', endAzan);
+$('azStop').onclick = () => {
+  if (!$('azan').classList.contains('ended')) { player.pause(); endAzan(); return; }
+  $('azan').classList.remove('open'); azanOpen = false;
+};
+
+/* ---------- notifications ---------- */
+async function notify(title, body) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  try {
+    const reg = await navigator.serviceWorker?.getRegistration();
+    const opt = {body, icon:'icon-192.png', badge:'icon-192.png', tag:'waktu', renotify:true, requireInteraction:false};
+    if (reg) reg.showNotification(title, opt); else new Notification(title, opt);
+  } catch (e) {}
+}
+
+/* ---------- render ---------- */
+let lastDayKey = '', lastCheck = Date.now();
+function render() {
+  const now = Date.now(), ev = events(now), t = parts(now);
+  const today = dayEntry(t);
+  const dk = `${S.zone}:${t.y}-${t.m}-${t.d}:${S.fmt}`;
+  $('zoneCode').textContent = S.zone; $('zoneName').textContent = zoneName(S.zone);
+  $('greg').textContent = `${HARI[t.dow]}, ${t.d} ${BULAN[t.m-1]} ${t.y}`;
+  $('hijri').textContent = today ? hijriStr(today.hijri) : '';
+
+  if (!today) { $('nextName').textContent = 'Tiada data'; $('count').textContent = navigator.onLine ? 'Memuatkan…' : 'Sambung internet sekali untuk muat turun jadual'; $('list').innerHTML = ''; return; }
+
+  const main = ev.filter(e => !e.minor || e.k === 'syuruk');
+  const next = main.find(e => e.t > now);
+  const prev = [...main].reverse().find(e => e.t <= now);
+
+  if (dk !== lastDayKey) { buildList(today, t); lastDayKey = dk; }
+  // row states
+  const curK = prev && prev.day.d === t.d ? prev.k : (prev ? 'isha-prev' : null);
+  document.querySelectorAll('.row').forEach(r => {
+    const tt = +r.dataset.t; r.classList.toggle('past', tt <= now && r.dataset.k !== curK); r.classList.toggle('cur', r.dataset.k === curK && !r.classList.contains('minor'));
+  });
+
+  if (next) {
+    $('nextLbl').textContent = prev ? `Sekarang waktu ${prev.k === 'syuruk' ? 'Dhuha' : prev.label} · Seterusnya` : 'Waktu seterusnya';
+    $('nextName').textContent = next.label; $('nextTime').textContent = fmt(next.t);
+    let s = Math.max(0, Math.round((next.t - now) / 1000));
+    const h = Math.floor(s/3600), m = Math.floor(s%3600/60), sec = s%60;
+    $('count').innerHTML = `${h ? `${h}<span class="u">jam</span>` : ''}${String(m).padStart(h?2:1,'0')}<span class="u">min</span>${String(sec).padStart(2,'0')}<span class="u">saat</span>`;
+    if (prev) {
+      const pct = Math.min(100, (now - prev.t) / (next.t - prev.t) * 100);
+      $('barFill').style.width = pct + '%';
+      $('capPrev').textContent = `${prev.k === 'syuruk' ? 'Syuruk' : prev.label} ${fmt(prev.t)}`; $('capNext').textContent = `${next.label} ${fmt(next.t)}`;
+    }
+    document.title = `${next.label} ${fmt(next.t)} · −${h ? h + 'j ' : ''}${m}m`;
+  }
+  check(now, ev);
+}
+
+const bellSvg = on => on
+  ? '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 22a2.5 2.5 0 0 0 2.4-2h-4.8a2.5 2.5 0 0 0 2.4 2zm7-6V11a7 7 0 0 0-5.5-6.8V3.5a1.5 1.5 0 0 0-3 0v.7A7 7 0 0 0 5 11v5l-2 2v1h18v-1z"/></svg>'
+  : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8a6 6 0 0 0-9.3-5M6 8c0 7-3 9-3 9h14M13.7 21a2 2 0 0 1-3.4 0M3 3l18 18"/></svg>';
+
+function buildList(e, t) {
+  $('list').innerHTML = PRAYERS.map(p => {
+    const label = p.k === 'dhuhr' && t.dow === 5 ? 'Jumaat' : p.n;
+    const bell = p.azan ? `<button class="bell" data-bell="${p.k}" aria-pressed="${!!S.on[p.k]}" aria-label="Azan ${label}">${bellSvg(S.on[p.k])}</button>` : '<span></span>';
+    return `<div class="row${p.minor ? ' minor' : ''}" data-k="${p.k}" data-t="${e[p.k]*1000}"><span class="n">${label}</span><span class="t">${fmt(e[p.k]*1000)}</span>${bell}</div>`;
+  }).join('');
+}
+$('list').addEventListener('click', ev => {
+  const b = ev.target.closest('[data-bell]'); if (!b) return;
+  const k = b.dataset.bell; S.on[k] = !S.on[k]; save();
+  b.setAttribute('aria-pressed', S.on[k]); b.innerHTML = bellSvg(S.on[k]);
+  toast(`Azan ${S.on[k] ? 'dihidupkan' : 'dimatikan'} untuk ${b.getAttribute('aria-label').replace('Azan ','')}`);
+});
+
+/* fire azan/reminders for instants crossed since last tick (grace 15 min for throttled background tabs) */
+function check(now, ev) {
+  const from = lastCheck; lastCheck = now;
+  if (now - from > 15 * 60e3) return;           // was asleep a long time — don't replay stale azan
+  for (const e of ev) {
+    if (!e.azan) continue;
+    if (S.remind) {
+      const r = e.t - S.remind * 60e3;
+      if (r > from && r <= now) { chime(2); notify(`${e.label} dalam ${S.remind} minit`, `${fmt(e.t)} · ${S.zone}`); toast(`${e.label} dalam ${S.remind} minit`); }
+    }
+    if (e.t > from && e.t <= now && S.on[e.k]) {
+      playAzan(e);
+      notify(`Telah masuk waktu ${e.label}`, `${fmt(e.t)} · ${zoneName(S.zone)}`);
+    }
+  }
+}
+
+function renderStatus() {
+  const st = $('status');
+  st.classList.toggle('on', unlocked);
+  const n = Object.values(S.on).filter(Boolean).length;
+  $('statusTxt').textContent = unlocked
+    ? `Azan aktif · ${n}/5 waktu${S.wake ? ' · skrin sentiasa hidup' : ''}`
+    : 'Ketik di sini untuk aktifkan bunyi azan';
+}
+
+/* ---------- month table ---------- */
+let mView = null;
+async function showMonth(y, m) {
+  mView = {y, m};
+  $('monthTitle').textContent = `${BULAN[m-1]} ${y}`;
+  $('monthBody').innerHTML = '<p style="color:var(--muted)">Memuatkan…</p>';
+  let data;
+  try { data = await ensureMonth(S.zone, y, m); } catch (e) { $('monthBody').innerHTML = '<p style="color:var(--warn)">Tidak dapat memuat turun. Semak sambungan internet.</p>'; return; }
+  const t = parts(Date.now());
+  $('monthBody').innerHTML = `<table><thead><tr><th>Tarikh</th><th>Imsak</th><th>Subuh</th><th>Syuruk</th><th>Zohor</th><th>Asar</th><th>Maghrib</th><th>Isyak</th></tr></thead><tbody>${
+    data.map(e => {
+      const dow = new Date(Date.UTC(y, m-1, e.day)).getUTCDay();
+      const [, hm, hd] = (e.hijri || '--').split('-');
+      const cls = [(y === t.y && m === t.m && e.day === t.d) ? 'today' : '', dow === 5 ? 'fri' : ''].join(' ');
+      return `<tr class="${cls}"><td>${e.day} ${HARI[dow].slice(0,3)}<small>${hd ? +hd + ' ' + HIJRI_S[+hm-1] : ''}</small></td>${['imsak','fajr','syuruk','dhuhr','asr','maghrib','isha'].map(k => `<td>${fmt(e[k]*1000)}</td>`).join('')}</tr>`;
+    }).join('')}</tbody></table>`;
+  const tr = $('monthBody').querySelector('tr.today'), pn = $('monthSheet').querySelector('.panel');
+  pn.scrollTop = 0; if (tr) pn.scrollTop = tr.getBoundingClientRect().top - pn.getBoundingClientRect().top - 150;
+}
+$('mPrev').onclick = () => { let {y,m} = mView; m--; if (!m) { m = 12; y--; } showMonth(y, m); };
+$('mNext').onclick = () => { let {y,m} = mView; m++; if (m > 12) { m = 1; y++; } showMonth(y, m); };
+
+/* ---------- sheets & settings UI ---------- */
+const open = id => $(id).classList.add('open');
+document.querySelectorAll('.sheet').forEach(sh => sh.addEventListener('click', e => { if (e.target === sh || e.target.closest('[data-close]')) sh.classList.remove('open'); }));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('.sheet.open').forEach(s => s.classList.remove('open')); });
+$('setBtn').onclick = () => { syncSettingsUI(); open('setSheet'); };
+$('zoneBtn').onclick = () => { syncSettingsUI(); open('setSheet'); setTimeout(() => $('zoneSel').focus(), 50); };
+$('monthBtn').onclick = () => { const t = parts(Date.now()); open('monthSheet'); showMonth(t.y, t.m); };
+$('testBtn').onclick = async () => {
+  await unlock();
+  const now = Date.now(), ev = events(now).filter(e => e.azan);
+  const nx = ev.find(e => e.t > now) || ev[ev.length-1] || {k:'dhuhr', label:'Zohor', t: now};
+  playAzan(nx, true);
+};
+$('status').onclick = () => unlock().then(() => unlocked && toast('Azan aktif. Biarkan aplikasi ini terbuka.'));
+
+function fillZones() {
+  const sel = $('zoneSel'); if (!ZONES) { sel.innerHTML = `<option value="${S.zone}">${S.zone}</option>`; return; }
+  const by = {}; ZONES.forEach(z => (by[z.negeri] = by[z.negeri] || []).push(z));
+  sel.innerHTML = Object.keys(by).map(n => `<optgroup label="${n}">${by[n].map(z => `<option value="${z.jakimCode}">${z.jakimCode} — ${z.daerah}</option>`).join('')}</optgroup>`).join('');
+  sel.value = S.zone;
+}
+function syncSettingsUI() {
+  fillZones();
+  $('voiceSel').value = S.voice; $('subuhSel').value = S.subuh; $('vol').value = S.vol;
+  document.querySelectorAll('#remindSeg button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.v === S.remind));
+  document.querySelectorAll('#fmtSeg button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.v === S.fmt));
+  $('wakeTog').setAttribute('aria-pressed', S.wake);
+  const np = 'Notification' in window ? Notification.permission : 'unsupported';
+  $('notifBtn').textContent = np === 'granted' ? 'Dibenarkan' : np === 'denied' ? 'Disekat' : np === 'unsupported' ? 'Tidak disokong' : 'Benarkan';
+  $('notifBtn').disabled = np !== 'default';
+}
+$('zoneSel').onchange = async e => {
+  S.zone = e.target.value; save(); lastDayKey = '';
+  const t = parts(Date.now()); render();
+  try { await loadAround(t); } catch (err) { toast('Gagal muat turun jadual zon ini.'); }
+  render(); renderStatus();
+};
+$('voiceSel').onchange = e => { S.voice = e.target.value; save(); };
+$('subuhSel').onchange = e => { S.subuh = e.target.value; save(); };
+$('vol').oninput = e => { S.vol = +e.target.value; player.volume = S.vol; save(); };
+$('remindSeg').onclick = e => { const b = e.target.closest('button'); if (!b) return; S.remind = +b.dataset.v; save(); syncSettingsUI(); };
+$('fmtSeg').onclick = e => { const b = e.target.closest('button'); if (!b) return; S.fmt = +b.dataset.v; save(); syncSettingsUI(); lastDayKey = ''; render(); };
+$('wakeTog').onclick = () => { S.wake = !S.wake; save(); syncSettingsUI(); applyWake(); renderStatus(); };
+$('notifBtn').onclick = async () => { if ('Notification' in window) { await Notification.requestPermission(); syncSettingsUI(); } };
+
+/* ---------- wake lock ---------- */
+let wl = null;
+async function applyWake() {
+  if (!('wakeLock' in navigator)) { if (S.wake) toast('Peranti ini tidak menyokong “skrin sentiasa hidup”.'); return; }
+  try {
+    if (S.wake && !wl && document.visibilityState === 'visible') { wl = await navigator.wakeLock.request('screen'); wl.addEventListener('release', () => wl = null); }
+    if (!S.wake && wl) { await wl.release(); wl = null; }
+  } catch (e) {}
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { applyWake(); render(); } });
+
+/* ---------- misc ---------- */
+let tt;
+function toast(msg) { const el = $('toast'); el.textContent = msg; el.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => el.classList.remove('show'), 3200); }
+// first interaction anywhere unlocks audio (browser autoplay rule)
+['pointerdown','keydown'].forEach(evn => document.addEventListener(evn, () => unlock(), {once:true, capture:true}));
+
+async function loadAround(t) {
+  const nx = addDays(t, 1), pv = addDays(t, -1);
+  const months = [[t.y,t.m],[nx.y,nx.m],[pv.y,pv.m]];
+  const seen = new Set();
+  for (const [y,m] of months) { const k = y+'-'+m; if (seen.has(k)) continue; seen.add(k); try { await ensureMonth(S.zone, y, m); } catch (e) { if (y === t.y && m === t.m) throw e; } }
+  // prefetch next calendar month in the background for offline use
+  const nm = t.m === 12 ? [t.y+1, 1] : [t.y, t.m+1];
+  ensureMonth(S.zone, nm[0], nm[1]).catch(()=>{});
+}
+
+async function init() {
+  render(); renderStatus();
+  loadZones();
+  try { await loadAround(parts(Date.now())); } catch (e) { if (!dayEntry(parts(Date.now()))) toast('Tiada sambungan — jadual belum dimuat turun.'); }
+  lastCheck = Date.now();
+  render();
+  let lastTry = Date.now();
+  setInterval(() => {
+    const t = parts(Date.now());
+    if (!dayEntry(addDays(t, 1)) && Date.now() - lastTry > 5 * 60e3) { lastTry = Date.now(); loadAround(t).catch(()=>{}); }
+    render();
+  }, 1000);
+  applyWake();
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+init();
+})();
+</script>
+</body>
+</html>
