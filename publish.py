@@ -34,7 +34,7 @@ if st == 404:
 if not os.path.isdir(os.path.join(HERE, '.git')):
     git('init', '-b', 'main')
     git('config', 'user.name', OWNER); git('config', 'user.email', f'{OWNER}@users.noreply.github.com')
-open(os.path.join(HERE, '.gitignore'), 'w').write('__pycache__/\n')
+open(os.path.join(HERE, '.gitignore'), 'w').write('__pycache__/\nandroid/build/\n')
 git('add', '-A')
 git('commit', '-m', 'Update Waktu Solat ' + time.strftime('%Y-%m-%d %H:%M'))
 rc = git('push', f'https://x-access-token:{TOK}@github.com/{OWNER}/{REPO}.git', 'HEAD:main')

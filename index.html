@@ -120,6 +120,35 @@ tr.fri td:first-child{color:var(--accent)}
 .month-nav{display:flex;gap:6px}
 .month-nav button{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);color:var(--muted);font-size:18px}
 
+/* location sheet, chips, permissions */
+.gps{width:100%;margin-top:2px}
+.gps-msg{font-size:13px;color:var(--muted);min-height:20px;margin:10px 0 4px;line-height:1.5}
+.gps-msg.err{color:var(--warn)}
+input[type=search]{min-height:48px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:0 14px;font:inherit;font-size:15px;width:100%;margin-top:14px}
+.results{display:flex;flex-direction:column;margin-top:4px}
+.res{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:48px;border-bottom:1px solid var(--line);text-align:left;padding:0 4px;font-size:15px}
+.res span{color:var(--muted);font-size:12px;white-space:nowrap}
+.res:hover{background:var(--surface2)}
+.grp{font-size:11px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;margin:20px 0 10px;font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:42px;padding:0 14px;border-radius:21px;border:1px solid var(--line);background:var(--bg);font-size:14px;font-weight:600}
+.chip small{color:var(--dim);font-weight:600;margin-left:6px;font-size:11px;letter-spacing:.04em}
+.chip[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
+.chip[aria-pressed="true"] small{color:var(--accent)}
+.chip:hover{background:var(--surface2)}
+.perm{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:52px;border-bottom:1px solid var(--line)}
+.perm:last-child{border-bottom:0}
+.perm div{display:flex;flex-direction:column;gap:3px;min-width:0}
+.perm b{font-size:15px;font-weight:600}
+.perm span{font-size:12px;color:var(--dim);line-height:1.4}
+.perm .btn{flex:none;padding:0 14px;min-height:40px;font-size:14px}
+.perm .ok{color:var(--ok);font-size:13px;font-weight:700;flex:none}
+a.btn{text-decoration:none;color:inherit}
+a.btn.primary{color:var(--accent-ink)}
+.status.warn .dot{background:var(--warn)}
+html.native .web-only{display:none!important}
+html:not(.native) .native-only{display:none!important}
+
 /* azan overlay */
 .azan{position:fixed;inset:0;z-index:30;background:var(--bg);display:none;flex-direction:column;justify-content:center;padding:32px 26px calc(32px + env(safe-area-inset-bottom));text-align:left}
 .azan.open{display:flex}
@@ -173,7 +202,9 @@ tr.fri td:first-child{color:var(--accent)}
     <button class="btn" id="testBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>Uji azan</button>
   </div>
 
-  <p class="foot">Data waktu solat JAKIM melalui <a href="https://www.waktusolat.my/" target="_blank" rel="noopener">waktusolat.my</a> / api.waktusolat.app. Azan dimainkan secara automatik ketika aplikasi ini dibuka (boleh di latar belakang, tetapi bukan selepas ditutup sepenuhnya).</p>
+  <p class="foot">Data waktu solat JAKIM melalui <a href="https://www.waktusolat.my/" target="_blank" rel="noopener">waktusolat.my</a> / api.waktusolat.app.
+    <span class="web-only">Versi web: azan berbunyi ketika halaman ini dibuka sahaja. Untuk azan walaupun app ditutup, <a href="https://github.com/ainsyirr/waktusolat/releases/latest/download/WaktuSolat.apk">pasang app Android</a>.</span>
+    <span class="native-only">Azan dijadualkan oleh Android dan berbunyi walaupun app ditutup.</span></p>
 </div>
 
 <!-- settings -->
@@ -181,8 +212,22 @@ tr.fri td:first-child{color:var(--accent)}
   <div class="panel">
     <h2 id="setTitle">Tetapan <button class="icon-btn" data-close aria-label="Tutup">✕</button></h2>
     <div class="field">
-      <label for="zoneSel">Zon waktu solat</label>
+      <span class="l">Lokasi</span>
+      <button class="btn" id="locBtn2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>GPS / pilih bandar</button>
+      <label for="zoneSel" style="margin-top:6px">Atau pilih zon JAKIM (senarai penuh)</label>
       <select id="zoneSel"></select>
+    </div>
+    <div class="field native-only">
+      <span class="l">Azan ketika app ditutup</span>
+      <div id="permList"></div>
+      <span class="h">Xiaomi / Redmi / Poco, Oppo, Realme, Vivo, Huawei, Honor: dalam Tetapan telefon → Apl → Waktu Solat, hidupkan <b>Autostart</b> dan pilih bateri <b>Tiada sekatan</b>. Jangan tekan “Force stop”.</span>
+      <button class="btn" id="test1m"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>Uji: azan dalam 1 minit</button>
+      <span class="h">Tekan, kemudian tutup app (leret keluar dari senarai app terkini) dan kunci skrin. Azan pendek patut berbunyi dalam masa 1 minit.</span>
+    </div>
+    <div class="field web-only">
+      <span class="l">App Android — azan walaupun app ditutup</span>
+      <a class="btn primary" href="https://github.com/ainsyirr/waktusolat/releases/latest/download/WaktuSolat.apk">Muat turun WaktuSolat.apk</a>
+      <span class="h">Buka fail yang dimuat turun dan benarkan “Pasang apl tidak diketahui” bila diminta. Tetapan anda di sini tidak dipindahkan; pilih lokasi semula dalam app.</span>
     </div>
     <div class="field">
       <label for="voiceSel">Suara azan (Zohor, Asar, Maghrib, Isyak)</label>
@@ -214,14 +259,27 @@ tr.fri td:first-child{color:var(--accent)}
       <span class="l">Format masa</span>
       <div class="seg" id="fmtSeg"><button data-v="24">24 jam</button><button data-v="12">12 jam</button></div>
     </div>
-    <div class="field">
+    <div class="field web-only">
       <div class="switch"><span>Skrin sentiasa hidup</span><button class="tog" id="wakeTog" aria-label="Skrin sentiasa hidup"></button></div>
       <span class="h">Cara paling pasti azan berbunyi: biarkan aplikasi terbuka dengan skrin hidup (cth. telefon dicas di rumah).</span>
     </div>
-    <div class="field">
+    <div class="field web-only">
       <div class="switch"><span>Notifikasi</span><button class="btn" id="notifBtn" style="flex:none;padding:0 16px">Benarkan</button></div>
       <span class="h">Tunjuk notifikasi apabila masuk waktu ketika aplikasi di latar belakang.</span>
     </div>
+  </div>
+</div>
+
+<!-- location -->
+<div class="sheet" id="locSheet" role="dialog" aria-modal="true" aria-labelledby="locTitle">
+  <div class="panel">
+    <h2 id="locTitle">Lokasi anda <button class="icon-btn" data-close aria-label="Tutup">✕</button></h2>
+    <button class="btn primary gps" id="gpsBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7.5"/></svg>Kesan lokasi saya (GPS)</button>
+    <div class="gps-msg" id="gpsMsg"></div>
+    <div class="switch"><span>Kesan semula secara automatik setiap kali app dibuka</span><button class="tog" id="autoTog" aria-label="Kesan lokasi automatik"></button></div>
+    <input type="search" id="townQ" placeholder="Cari bandar — cth. Kunak, Tawau, Keningau" autocomplete="off" enterkeyhint="search">
+    <div class="results" id="townRes"></div>
+    <div id="sabahChips"></div>
   </div>
 </div>
 
@@ -256,6 +314,9 @@ tr.fri td:first-child{color:var(--accent)}
 const API = 'https://api.waktusolat.app';
 const MYT = 8 * 3600e3;
 const $ = id => document.getElementById(id);
+const NATIVE = window.AzanNative || null;           // present inside the Android app
+if (NATIVE) document.documentElement.classList.add('native');
+const nat = (fn, ...a) => { try { return NATIVE && NATIVE[fn] ? NATIVE[fn](...a) : null; } catch (e) { console.warn('native', fn, e); return null; } };
 
 const PRAYERS = [
   {k:'imsak',  n:'Imsak',   azan:false, minor:true},
@@ -272,11 +333,14 @@ const HIJRI_S = ['Muh','Saf','R.Awal','R.Akhir','J.Awal','J.Akhir','Rejab','Syaa
 const HARI = ['Ahad','Isnin','Selasa','Rabu','Khamis','Jumaat','Sabtu'];
 
 /* ---------- settings ---------- */
-const DEF = {zone:'SBH07', voice:'azan.mp3', subuh:'azan_subuh.mp3', vol:0.9, remind:0, fmt:24, wake:false,
+const FIRST_RUN = !localStorage.getItem('ws:settings');
+const DEF = {zone:'SBH07', place:'', autoLoc:false, voice:'azan.mp3', subuh:'azan_subuh.mp3', vol:0.9, remind:0, fmt:24, wake:false,
   on:{fajr:true,dhuhr:true,asr:true,maghrib:true,isha:true}};
 let S = Object.assign({}, DEF, JSON.parse(localStorage.getItem('ws:settings') || '{}'));
 S.on = Object.assign({}, DEF.on, S.on);
-const save = () => localStorage.setItem('ws:settings', JSON.stringify(S));
+let natT;
+function pushNative() { if (NATIVE) nat('saveSettings', JSON.stringify(Object.assign({}, S, {zoneLabel: zoneName(S.zone)}))); }
+const save = () => { localStorage.setItem('ws:settings', JSON.stringify(S)); clearTimeout(natT); natT = setTimeout(pushNative, 300); };
 
 /* ---------- time helpers (Malaysia = UTC+8, no DST) ---------- */
 const parts = ms => { const d = new Date(ms + MYT); return {y:d.getUTCFullYear(), m:d.getUTCMonth()+1, d:d.getUTCDate(), dow:d.getUTCDay()}; };
@@ -304,6 +368,7 @@ async function fetchMonth(z, y, m) {
   const data = j.prayers;
   localStorage.setItem(mkey(z,y,m), JSON.stringify(data));
   memo[mkey(z,y,m)] = data;
+  nat('cacheMonth', z, y, m, JSON.stringify(data));
   return data;
 }
 async function ensureMonth(z, y, m) { return getMonth(z,y,m) || fetchMonth(z,y,m); }
@@ -339,6 +404,7 @@ async function blobUrl(file) {
 const within = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);
 let unlocking = null;
 function unlock() {
+  if (NATIVE) { unlocked = true; return Promise.resolve(); }   // Android plays azan natively
   if (unlocked) return Promise.resolve();
   if (unlocking) return unlocking;
   unlocking = (async () => {
@@ -383,6 +449,11 @@ async function playAzan(ev, test = false) {
   $('azSub').textContent = `${fmt(ev.t)} · ${zoneName(S.zone)}`;
   ov.classList.remove('ended'); ov.classList.add('open'); azanOpen = true;
   $('azStop').textContent = 'Hentikan azan';
+  if (NATIVE) {                       // audio is played by the Android service
+    if (test) nat('testAzan', ev.k, ev.label);
+    watchNative();
+    return;
+  }
   if ('mediaSession' in navigator) navigator.mediaSession.metadata = new MediaMetadata({title: `Azan ${ev.label}`, artist: zoneName(S.zone), artwork:[{src:'icon-512.png',sizes:'512x512',type:'image/png'}]});
   if (file === 'chime') { chime(4); setTimeout(endAzan, 4500); return; }
   try {
@@ -396,14 +467,24 @@ async function playAzan(ev, test = false) {
   }
 }
 function endAzan() { $('azan').classList.add('ended'); $('azStop').textContent = 'Tutup'; }
+let watchT;
+function watchNative() {           // close the "playing" state when the native player finishes
+  clearInterval(watchT); let seen = false, n = 0;
+  watchT = setInterval(() => {
+    const st = JSON.parse(nat('info') || '{}'); n++;
+    if (st.playing) seen = true;
+    if ((seen && !st.playing) || (!seen && n > 8)) { clearInterval(watchT); endAzan(); }
+  }, 1000);
+}
 player.addEventListener('ended', endAzan);
 $('azStop').onclick = () => {
-  if (!$('azan').classList.contains('ended')) { player.pause(); endAzan(); return; }
+  if (!$('azan').classList.contains('ended')) { if (NATIVE) { nat('stopAzan'); clearInterval(watchT); } else player.pause(); endAzan(); return; }
   $('azan').classList.remove('open'); azanOpen = false;
 };
 
 /* ---------- notifications ---------- */
 async function notify(title, body) {
+  if (NATIVE) return;                // Android posts its own notifications
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
   try {
     const reg = await navigator.serviceWorker?.getRegistration();
@@ -418,7 +499,7 @@ function render() {
   const now = Date.now(), ev = events(now), t = parts(now);
   const today = dayEntry(t);
   const dk = `${S.zone}:${t.y}-${t.m}-${t.d}:${S.fmt}`;
-  $('zoneCode').textContent = S.zone; $('zoneName').textContent = zoneName(S.zone);
+  $('zoneCode').textContent = S.place ? `${S.zone} · ${S.place.toUpperCase()}` : S.zone; $('zoneName').textContent = zoneName(S.zone);
   $('greg').textContent = `${HARI[t.dow]}, ${t.d} ${BULAN[t.m-1]} ${t.y}`;
   $('hijri').textContent = today ? hijriStr(today.hijri) : '';
 
@@ -477,7 +558,8 @@ function check(now, ev) {
     if (!e.azan) continue;
     if (S.remind) {
       const r = e.t - S.remind * 60e3;
-      if (r > from && r <= now) { chime(2); notify(`${e.label} dalam ${S.remind} minit`, `${fmt(e.t)} · ${S.zone}`); toast(`${e.label} dalam ${S.remind} minit`); }
+      if (r > from && r <= now && NATIVE) toast(`${e.label} dalam ${S.remind} minit`);
+      else if (r > from && r <= now) { chime(2); notify(`${e.label} dalam ${S.remind} minit`, `${fmt(e.t)} · ${S.zone}`); toast(`${e.label} dalam ${S.remind} minit`); }
     }
     if (e.t > from && e.t <= now && S.on[e.k]) {
       playAzan(e);
@@ -486,8 +568,22 @@ function check(now, ev) {
   }
 }
 
+function nativeInfo() { try { return JSON.parse(nat('info') || '{}'); } catch (e) { return {}; } }
 function renderStatus() {
   const st = $('status');
+  if (NATIVE) {
+    const i = nativeInfo(), n = Object.values(S.on).filter(Boolean).length;
+    const problems = [];
+    if (i.notif === false) problems.push('notifikasi disekat');
+    if (i.exact === false) problems.push('penggera tepat tidak dibenarkan');
+    if (i.battery === false) problems.push('bateri belum dikecualikan');
+    const nx = i.next && i.next.at ? ` · seterusnya ${i.next.label} ${fmt(i.next.prayer)}${i.next.type === 'remind' ? ' (peringatan)' : ''}` : '';
+    st.classList.toggle('on', !problems.length); st.classList.toggle('warn', !!problems.length);
+    $('statusTxt').textContent = problems.length
+      ? `Azan ${n}/5 waktu · perlu tindakan: ${problems.join(', ')} — ketik`
+      : `Azan aktif walaupun app ditutup · ${n}/5 waktu${nx}`;
+    return;
+  }
   st.classList.toggle('on', unlocked);
   const n = Object.values(S.on).filter(Boolean).length;
   $('statusTxt').textContent = unlocked
@@ -522,15 +618,24 @@ const open = id => $(id).classList.add('open');
 document.querySelectorAll('.sheet').forEach(sh => sh.addEventListener('click', e => { if (e.target === sh || e.target.closest('[data-close]')) sh.classList.remove('open'); }));
 document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('.sheet.open').forEach(s => s.classList.remove('open')); });
 $('setBtn').onclick = () => { syncSettingsUI(); open('setSheet'); };
-$('zoneBtn').onclick = () => { syncSettingsUI(); open('setSheet'); setTimeout(() => $('zoneSel').focus(), 50); };
+$('zoneBtn').onclick = () => openLoc();
+$('locBtn2').onclick = () => { $('setSheet').classList.remove('open'); openLoc(); };
 $('monthBtn').onclick = () => { const t = parts(Date.now()); open('monthSheet'); showMonth(t.y, t.m); };
 $('testBtn').onclick = async () => {
+  if (NATIVE) {
+    const now = Date.now(), ev = events(now).filter(e => e.azan);
+    const nx = ev.find(e => e.t > now) || {k:'dhuhr', label:'Zohor', t: now};
+    return playAzan(nx, true);
+  }
   await unlock();
   const now = Date.now(), ev = events(now).filter(e => e.azan);
   const nx = ev.find(e => e.t > now) || ev[ev.length-1] || {k:'dhuhr', label:'Zohor', t: now};
   playAzan(nx, true);
 };
-$('status').onclick = () => unlock().then(() => unlocked && toast('Azan aktif. Biarkan aplikasi ini terbuka.'));
+$('status').onclick = () => {
+  if (NATIVE) { syncSettingsUI(); open('setSheet'); setTimeout(() => $('permList').scrollIntoView({block:'center'}), 60); return; }
+  unlock().then(() => unlocked && toast('Azan aktif. Biarkan aplikasi ini terbuka.'));
+};
 
 function fillZones() {
   const sel = $('zoneSel'); if (!ZONES) { sel.innerHTML = `<option value="${S.zone}">${S.zone}</option>`; return; }
@@ -547,13 +652,110 @@ function syncSettingsUI() {
   const np = 'Notification' in window ? Notification.permission : 'unsupported';
   $('notifBtn').textContent = np === 'granted' ? 'Dibenarkan' : np === 'denied' ? 'Disekat' : np === 'unsupported' ? 'Tidak disokong' : 'Benarkan';
   $('notifBtn').disabled = np !== 'default';
+  if (NATIVE) renderPerms();
 }
-$('zoneSel').onchange = async e => {
-  S.zone = e.target.value; save(); lastDayKey = '';
+function renderPerms() {
+  const i = nativeInfo();
+  const row = (ok, title, sub, act, label) => `<div class="perm"><div><b>${title}</b><span>${sub}</span></div>${ok ? '<span class="ok">✓ OK</span>' : `<button class="btn" data-act="${act}">${label}</button>`}</div>`;
+  $('permList').innerHTML =
+    row(i.notif !== false, 'Notifikasi', 'Untuk butang “Hentikan azan” & peringatan', 'requestNotif', 'Benarkan') +
+    row(i.exact !== false, 'Penggera tepat', 'Azan tepat pada masanya', 'exactSettings', 'Benarkan') +
+    row(i.battery !== false, 'Pengoptimuman bateri', 'Elak Android menyekat azan bila telefon tidur', 'fixBattery', 'Kecualikan');
+}
+$('permList').addEventListener('click', e => { const b = e.target.closest('[data-act]'); if (b) nat(b.dataset.act); });
+$('test1m').onclick = () => { nat('testInOneMinute'); toast('Dijadualkan. Tutup app sekarang — azan dalam ~1 minit.'); };
+async function setZone(zone, place) {
+  const changed = zone !== S.zone;
+  S.zone = zone; S.place = place || ''; save(); lastDayKey = '';
   const t = parts(Date.now()); render();
-  try { await loadAround(t); } catch (err) { toast('Gagal muat turun jadual zon ini.'); }
-  render(); renderStatus();
-};
+  if (changed) { try { await loadAround(t); } catch (err) { toast('Gagal muat turun jadual zon ini.'); } }
+  lastCheck = Date.now(); render(); renderStatus(); renderLoc();
+}
+$('zoneSel').onchange = e => setZone(e.target.value, '');
+
+/* ---------- location: GPS + town picker ---------- */
+const SABAH = [
+  ['Pantai Barat', [['Kota Kinabalu','SBH07'],['Penampang','SBH07'],['Putatan','SBH07'],['Papar','SBH07'],['Tuaran','SBH07'],['Kota Belud','SBH07'],['Ranau','SBH07']]],
+  ['Pantai Timur', [['Lahad Datu','SBH03'],['Kunak','SBH03'],['Semporna','SBH03'],['Tawau','SBH04'],['Kalabakan','SBH04'],['Sandakan','SBH01'],['Beluran','SBH02'],['Telupid','SBH02']]],
+  ['Utara & Pedalaman', [['Kudat','SBH05'],['Kota Marudu','SBH05'],['Pitas','SBH05'],['Keningau','SBH08'],['Tambunan','SBH08'],['Nabawan','SBH08'],['Beaufort','SBH09'],['Sipitang','SBH09'],['Tenom','SBH09'],['Kuala Penyu','SBH09']]],
+];
+function towns() {
+  const out = [], seen = new Set();
+  const add = (name, code, negeri) => { name = name.replace(/\(.*?\)|\(|\)/g, '').replace(/^(Bandar|Daerah Kecil)\s+/i, '').trim(); const k = name.toLowerCase() + code; if (name.length > 1 && !seen.has(k)) { seen.add(k); out.push({name, code, negeri}); } };
+  SABAH.forEach(([, list]) => list.forEach(([n, c]) => add(n, c, 'Sabah')));
+  (ZONES || []).forEach(z => z.daerah.split(/,|\bdan\b/).forEach(n => add(n, z.jakimCode, z.negeri)));
+  return out;
+}
+function renderLoc() {
+  if (!$('locSheet')) return;
+  $('autoTog').setAttribute('aria-pressed', !!S.autoLoc);
+  $('sabahChips').innerHTML = SABAH.map(([g, list]) => `<div class="grp">Sabah — ${g}</div><div class="chips">${
+    list.map(([n, c]) => `<button class="chip" data-z="${c}" data-p="${n}" aria-pressed="${S.zone === c && S.place === n}">${n}<small>${c}</small></button>`).join('')}</div>`).join('');
+  searchTowns();
+}
+function searchTowns() {
+  const q = $('townQ').value.trim().toLowerCase();
+  if (q.length < 2) { $('townRes').innerHTML = ''; return; }
+  const hits = towns().filter(t => t.name.toLowerCase().includes(q)).sort((a, b) => a.name.toLowerCase().indexOf(q) - b.name.toLowerCase().indexOf(q)).slice(0, 12);
+  $('townRes').innerHTML = hits.length ? hits.map(t => `<button class="res" data-z="${t.code}" data-p="${t.name}">${t.name}<span>${t.code} · ${t.negeri}</span></button>`).join('')
+    : '<div class="gps-msg">Tiada padanan. Cuba nama daerah, atau pilih zon dalam Tetapan.</div>';
+}
+function openLoc() { renderLoc(); open('locSheet'); }
+$('townQ').addEventListener('input', searchTowns);
+$('locSheet').addEventListener('click', e => {
+  const b = e.target.closest('[data-z]'); if (!b) return;
+  S.autoLoc = false; setZone(b.dataset.z, b.dataset.p);
+  $('locSheet').classList.remove('open'); $('townQ').value = '';
+  toast(`Lokasi: ${b.dataset.p} (${b.dataset.z})`);
+});
+$('autoTog').onclick = () => { S.autoLoc = !S.autoLoc; save(); renderLoc(); if (S.autoLoc) locate(false); };
+
+let locWaiter = null;
+window.__nativeLoc = (lat, lon, err) => { if (locWaiter) { const w = locWaiter; locWaiter = null; err ? w.reject(new Error(err)) : w.resolve({lat, lon}); } };
+function coords(fresh) {
+  if (NATIVE) return new Promise((resolve, reject) => { locWaiter = {resolve, reject}; nat('requestLocation'); setTimeout(() => window.__nativeLoc(0, 0, 'timeout'), 30000); });
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) return reject(new Error('unsupported'));
+    navigator.geolocation.getCurrentPosition(p => resolve({lat: p.coords.latitude, lon: p.coords.longitude}),
+      e => reject(new Error(e.code === 1 ? 'denied' : e.code === 3 ? 'timeout' : 'unavailable')), {enableHighAccuracy:false, timeout:20000, maximumAge: fresh ? 30000 : 600000});
+  });
+}
+async function zoneAt(lat, lon) {
+  const q = async (a, b) => { try { const r = await fetch(`${API}/zones/${a.toFixed(4)}/${b.toFixed(4)}`); if (!r.ok) return null; const j = await r.json(); return j && j.zone ? j : null; } catch (e) { return null; } };
+  let hit = await q(lat, lon); if (hit) return hit;
+  // coastline / island gaps in the zone map: probe rings around the point, nearest first
+  for (const r of [0.02, 0.05, 0.1, 0.2]) {
+    const ring = await Promise.all([0,45,90,135,180,225,270,315].map(d => q(lat + r * Math.cos(d * Math.PI / 180), lon + r * Math.sin(d * Math.PI / 180))));
+    hit = ring.find(Boolean); if (hit) return hit;
+  }
+  return null;
+}
+const LOC_ERR = {denied:'Kebenaran lokasi ditolak. Benarkan lokasi untuk app ini, atau pilih bandar di bawah.', off:'Lokasi (GPS) telefon dimatikan. Hidupkan dalam Tetapan pantas, kemudian cuba lagi.',
+  timeout:'Lokasi tidak dapat dikesan (tamat masa). Cuba di kawasan terbuka, atau pilih bandar.', unavailable:'Lokasi tidak tersedia. Pilih bandar di bawah.', unsupported:'Peranti ini tidak menyokong GPS. Pilih bandar di bawah.'};
+let locBusy = false;
+async function locate(userAsked = true) {
+  if (locBusy) return; locBusy = true;
+  const msg = (t, err) => { $('gpsMsg').textContent = t; $('gpsMsg').classList.toggle('err', !!err); };
+  if (userAsked) msg('Mengesan lokasi…');
+  try {
+    const c = await coords(userAsked);
+    if (userAsked) msg('Mencari zon JAKIM…');
+    const z = await zoneAt(c.lat, c.lon);
+    if (!z) throw new Error(navigator.onLine ? 'nozone' : 'offline');
+    const place = z.district || '';
+    const changed = z.zone !== S.zone;
+    S.autoLoc = userAsked ? true : S.autoLoc; S.lastLoc = Date.now();
+    await setZone(z.zone, place);
+    msg(`Anda di ${place || z.zone} — zon ${z.zone}.`);
+    if (userAsked) { toast(`Lokasi: ${place} (${z.zone})`); setTimeout(() => $('locSheet').classList.remove('open'), 900); }
+    else if (changed) toast(`Lokasi berubah: ${place} (${z.zone}) — waktu azan dikemas kini`);
+  } catch (e) {
+    const k = e.message;
+    if (userAsked) msg(k === 'nozone' ? 'Lokasi di luar kawasan zon JAKIM. Pilih bandar di bawah.' : k === 'offline' ? 'Perlu internet untuk mencari zon. Pilih bandar di bawah.' : (LOC_ERR[k] || LOC_ERR.unavailable), true);
+  } finally { locBusy = false; }
+}
+$('gpsBtn').onclick = () => locate(true);
+window.__ws.zoneAt = zoneAt;
 $('voiceSel').onchange = e => { S.voice = e.target.value; save(); };
 $('subuhSel').onchange = e => { S.subuh = e.target.value; save(); };
 $('vol').oninput = e => { S.vol = +e.target.value; player.volume = S.vol; save(); };
@@ -602,7 +804,22 @@ async function init() {
     render();
   }, 1000);
   applyWake();
-  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(()=>{});
+  if (NATIVE) {
+    pushNative();
+    setInterval(renderStatus, 15000);
+    window.__nativeResume = () => { renderStatus(); render(); if ($('setSheet').classList.contains('open')) renderPerms(); if (S.autoLoc && Date.now() - (S.lastLoc || 0) > 20 * 60e3) locate(false); };
+    window.__nativeBack = () => {
+      if ($('azan').classList.contains('open')) { $('azStop').click(); return true; }
+      const sh = document.querySelector('.sheet.open'); if (sh) { sh.classList.remove('open'); return true; }
+      return false;
+    };
+    window.__nativeAzan = label => { $('azKicker').textContent = 'Telah masuk waktu'; $('azName').textContent = label; $('azSub').textContent = zoneName(S.zone);
+      $('azan').classList.remove('ended'); $('azan').classList.add('open'); $('azStop').textContent = 'Hentikan azan'; watchNative(); };
+    const pl = nativeInfo().playing; if (pl) window.__nativeAzan(pl);
+  }
+  if (FIRST_RUN) openLoc();
+  else if (S.autoLoc) locate(false);
+  if (!NATIVE && 'serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(()=>{});
 }
 init();
 })();

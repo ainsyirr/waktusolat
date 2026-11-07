@@ -1,5 +1,5 @@
 // Waktu Solat service worker — offline app shell + azan audio
-const CACHE = 'waktusolat-v1';
+const CACHE = 'waktusolat-v2';
 const SHELL = [
   './', 'index.html', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png',
   'audio/azan.mp3', 'audio/azan_subuh.mp3', 'audio/azan_pendek.mp3'
